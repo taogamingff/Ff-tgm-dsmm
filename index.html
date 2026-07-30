@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF Wishlist Manager - Quản Lý Danh Sách Mong Muốn Free Fire</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loader">
+            <div class="loader-circle"></div>
+            <div class="loader-text">Đang tải dữ liệu Free Fire...</div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div id="app" class="app-container" style="display: none;">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-fire"></i>
+                    <span>FF Manager</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#account" class="nav-item active" data-page="account">
+                    <i class="fas fa-user-shield"></i>
+                    <span>Tài Khoản</span>
+                </a>
+                <a href="#wishlist" class="nav-item" data-page="wishlist">
+                    <i class="fas fa-gift"></i>
+                    <span>Wishlist</span>
+                </a>
+                <a href="#items" class="nav-item" data-page="items">
+                    <i class="fas fa-box"></i>
+                    <span>Kho Item</span>
+                </a>
+                <a href="#history" class="nav-item" data-page="history">
+                    <i class="fas fa-history"></i>
+                    <span>Lịch Sử</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="server-status">
+                    <span class="status-dot online"></span>
+                    <span>Server: Online</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Tìm kiếm item, UID, nickname...">
+                </div>
+                <div class="top-bar-actions">
+                    <button class="btn-icon" onclick="syncData()" title="Đồng bộ dữ liệu">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="btn-icon" onclick="exportData()" title="Xuất dữ liệu">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page: Account Management -->
+            <section id="accountPage" class="page active">
+                <div class="page-header">
+                    <h1><i class="fas fa-user-shield"></i> Quản Lý Tài Khoản</h1>
+                    <p>Import hoặc nhập thủ công tài khoản Free Fire</p>
+                </div>
+
+                <div class="account-grid">
+                    <!-- Guest Import -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-file-import"></i> Import File Khách</h2>
+                            <span class="badge badge-primary">.dat</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="upload-zone" id="uploadZone">
+                                <div class="upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <h3>Kéo & Thả File Vào Đây</h3>
+                                <p>Hoặc click để chọn file .dat</p>
+                                <input type="file" id="fileInput" accept=".dat,.json,.txt" hidden>
+                            </div>
+
+                            <div id="guestInfo" class="account-info" style="display: none;">
+                                <div class="info-card">
+                                    <div class="info-header">
+                                        <i class="fas fa-check-circle text-success"></i>
+                                        <span>File đã được đọc thành công</span>
+                                    </div>
+                                    <div class="info-grid">
+                                        <div class="info-item">
+                                            <label>UID Game</label>
+                                            <span id="guestUID">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Mật Khẩu</label>
+                                            <span id="guestPassword">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Nickname</label>
+                                            <span id="guestNickname">-</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <label>Level</label>
+                                            <span id="guestLevel">-</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="toggle-group">
+                                <label class="toggle">
+                                    <input type="checkbox" id="rememberGuest" checked>
+                                    <span class="toggle-slider"></span>
+                                    <span class="toggle-label">Ghi nhớ thông tin</span>
+                                </label>
+                            </div>
+
+                            <button class="btn btn-primary btn-block" onclick="processGuestAccount()">
+                                <i class="fas fa-sign-in-alt"></i>
+                                Đăng Nhập & Chuyển Wishlist
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Manual Input -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-keyboard"></i> Nhập Thủ Công</h2>
+                            <span class="badge badge-info">Manual</span>
+                        </div>
+                        <div class="card-body">
+                            <form id="manualForm" onsubmit="return false;">
+                                <div class="form-group">
+                                    <label>UID Game</label>
+                                    <div class="input-group">
+                                        <span class="input-icon"><i class="fas fa-id-card"></i></span>
+                                        <input type="text" id="manualUID" placeholder="Nhập UID Game..." required>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Mật Khẩu</label>
+                                    <div class="input-group">
+                                        <span class="input-icon"><i class="fas fa-lock"></i></span>
+                                        <input type="password" id="manualPassword" placeholder="Nhập mật khẩu..." required>
+                                        <button type="button" class="btn-icon" onclick="togglePassword()">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Nickname (Tự động nhận dạng)</label>
+                                    <div class="input-group">
+                                        <span class="input-icon"><i class="fas fa-user"></i></span>
+                                        <input type="text" id="manualNickname" readonly placeholder="Sẽ tự động điền...">
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Server</label>
+                                    <select id="serverSelect" class="form-select">
+                                        <option value="vn">Việt Nam</option>
+                                        <option value="id">Indonesia</option>
+                                        <option value="th">Thái Lan</option>
+                                        <option value="br">Brazil</option>
+                                        <option value="in">Ấn Độ</option>
+                                    </select>
+                                </div>
+
+                                <div class="toggle-group">
+                                    <label class="toggle">
+                                        <input type="checkbox" id="rememberManual" checked>
+                                        <span class="toggle-slider"></span>
+                                        <span class="toggle-label">Ghi nhớ thông tin</span>
+                                    </label>
+                                </div>
+
+                                <button class="btn btn-primary btn-block" onclick="processManualAccount()">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    Đăng Nhập & Chuyển Wishlist
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page: Wishlist Management -->
+            <section id="wishlistPage" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-gift"></i> Danh Sách Mong Muốn</h1>
+                    <p>Quản lý item bạn muốn sở hữu trong Free Fire</p>
+                </div>
+
+                <!-- Current Account -->
+                <div id="currentAccountCard" class="card account-banner" style="display: none;">
+                    <div class="banner-content">
+                        <div class="banner-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="banner-info">
+                            <h3 id="bannerNickname">-</h3>
+                            <p>UID: <span id="bannerUID">-</span></p>
+                            <p>Server: <span id="bannerServer">-</span></p>
+                        </div>
+                        <div class="banner-actions">
+                            <button class="btn btn-sm btn-outline" onclick="switchToAccount()">
+                                <i class="fas fa-exchange-alt"></i> Đổi TK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="wishlist-grid-layout">
+                    <!-- Add Item Panel -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-plus-circle"></i> Thêm Item</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Link Item (ff-item.netlify.app)</label>
+                                <div class="input-group">
+                                    <span class="input-icon"><i class="fas fa-link"></i></span>
+                                    <input type="text" id="itemLink" placeholder="https://ff-item.netlify.app/?id=...">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Hoặc chọn từ danh sách item phổ biến</label>
+                                <select id="popularItems" class="form-select" onchange="selectPopularItem()">
+                                    <option value="">-- Chọn item --</option>
+                                    <option value="cobra_rage">Cobra Rage Bundle</option>
+                                    <option value="dragon_ak">Dragon AK-47</option>
+                                    <option value="angel_pants">Angel Pants</option>
+                                    <option value="flame_thrower">Flame Thrower</option>
+                                    <option value="elite_pass">Elite Pass</option>
+                                    <option value="diamond_royale">Diamond Royale</option>
+                                    <option value="criminal_bundle">Criminal Bundle</option>
+                                    <option value="frost_blade">Frost Blade</option>
+                                </select>
+                            </div>
+
+                            <div id="itemPreview" class="item-preview" style="display: none;">
+                                <div class="preview-image">
+                                    <img id="previewImage" src="" alt="Item Preview">
+                                </div>
+                                <div class="preview-info">
+                                    <h4 id="previewName">-</h4>
+                                    <p id="previewId">-</p>
+                                    <p id="previewRarity">-</p>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-success btn-block" onclick="addToWishlist()">
+                                <i class="fas fa-plus"></i>
+                                Thêm Vào Wishlist
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Remove Item Panel -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2><i class="fas fa-trash-alt"></i> Xóa Item</h2>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>ID Item Cần Xóa</label>
+                                <div class="input-group">
+                                    <span class="input-icon"><i class="fas fa-hashtag"></i></span>
+                                    <input type="text" id="deleteItemId" placeholder="Nhập ID item...">
+                                </div>
+                            </div>
+
+                            <div class="btn-group-vertical">
+                                <button class="btn btn-danger" onclick="deleteSpecificItem()">
+                                    <i class="fas fa-trash"></i>
+                                    Xóa Item Này
+                                </button>
+                                <button class="btn btn-warning" onclick="deleteAllItems()">
+                                    <i class="fas fa-trash-alt"></i>
+                                    Xóa Tất Cả Item
+                                </button>
+                            </div>
+
+                            <div class="wishlist-stats">
+                                <div class="stat-item">
+                                    <span class="stat-value" id="totalItems">0</span>
+                                    <span class="stat-label">Tổng Item</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value" id="rareItems">0</span>
+                                    <span class="stat-label">Item Hiếm</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value" id="estimatedValue">0</span>
+                                    <span class="stat-label">Giá Trị (KC)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Wishlist Display -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-list"></i> Danh Sách Wishlist</h2>
+                        <div class="card-actions">
+                            <button class="btn btn-sm btn-outline" onclick="filterItems('all')">Tất Cả</button>
+                            <button class="btn btn-sm btn-outline" onclick="filterItems('weapon')">Vũ Khí</button>
+                            <button class="btn btn-sm btn-outline" onclick="filterItems('skin')">Skin</button>
+                            <button class="btn btn-sm btn-outline" onclick="filterItems('bundle')">Bundle</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="wishlist-grid" id="wishlistGrid">
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <h3>Chưa có item nào</h3>
+                                <p>Thêm item từ link hoặc chọn từ danh sách phổ biến</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Page: Items Database -->
+            <section id="itemsPage" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-database"></i> Kho Item Free Fire</h1>
+                    <p>Danh sách tất cả item có sẵn trong game</p>
+                </div>
+                <div class="items-grid" id="itemsGrid">
+                    <!-- Items will be loaded dynamically -->
+                </div>
+            </section>
+
+            <!-- Page: History -->
+            <section id="historyPage" class="page">
+                <div class="page-header">
+                    <h1><i class="fas fa-history"></i> Lịch Sử Hoạt Động</h1>
+                    <p>Xem lại các hoạt động gần đây</p>
+                </div>
+                <div class="history-list" id="historyList">
+                    <!-- History will be loaded dynamically -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Modal Container -->
+    <div id="modalContainer" class="modal-container" style="display: none;">
+        <div class="modal-overlay" onclick="closeModal()"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle"></h3>
+                <button class="btn-icon" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
